@@ -1,5 +1,5 @@
 package activityapps;
 
-public class Map {
+public class Scene {
 
 }
