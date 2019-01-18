@@ -4,10 +4,12 @@ import java.util.ArrayList;
 
 public class Project {
 	private String name;
+	private Staff charge;
 	private ArrayList<Event> events;
 	private ArrayList<Staff> staffs;
 	private ArrayList<Item> globalItems;
-	private Staff charge;
+	
+	private Budget budget;
 	
 	
 	public Project(String name){
@@ -16,6 +18,8 @@ public class Project {
 		this.staffs = new ArrayList<Staff>();
 		this.globalItems = new ArrayList<Item>();
 		this.charge = null;
+		
+		this.budget = null;
 	}
 
 
@@ -36,6 +40,11 @@ public class Project {
 
 	public void setCharge(Staff charge) {
 		this.charge = charge;
+	}
+
+
+	public Budget getBudget() {
+		return budget;
 	}
 	
 	
