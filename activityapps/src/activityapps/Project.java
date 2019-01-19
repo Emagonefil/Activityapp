@@ -47,5 +47,11 @@ public class Project {
 		return budget;
 	}
 	
-	
+	public String toString(){
+		return "Project " + name + "(" +
+				(charge == null? "NO Manager, " : charge.getName()) + 
+				(budget == null? "NO Budget" : 
+					(budget.getAvailable())+"/"+budget.getTotal()) +
+				")";
+	}
 }

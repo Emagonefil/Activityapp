@@ -1,13 +1,29 @@
 package activityapps;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
 
-public class Staff {
+public class Staff{
+	
+	public class Task {
+		public String name;
+		public String description;
+		public Date startDate;
+		public Date endDate;
+		public String toString(){
+			return name + "(" +
+					(startDate==null? startDate : "?") +
+					" to " +
+					(endDate==null? endDate : "?") +
+					(description==null? ")" : ", "+description+")");
+		}
+	}
 	private String name;
 	private String gender;
 	private String department;
 	private String position;
-	private ArrayList<String> tasks;
+	private ArrayList<Task> tasks;
 	
 	public Staff(String name, String gender, String department, String position) {
 		super();
@@ -15,6 +31,7 @@ public class Staff {
 		this.gender = gender;
 		this.department = department;
 		this.position = position;
+		this.tasks = new ArrayList<Task>();
 	}
 
 	public String getName() {
@@ -47,6 +64,41 @@ public class Staff {
 
 	public void setPosition(String position) {
 		this.position = position;
+	}
+
+	public static void reorder(ArrayList<Staff> staffs) {
+		Comparator c = new Comparator<Staff>(){
+			@Override
+			public int compare(Staff s1, Staff s2) {
+				int departmentCompare = s1.department.compareTo(s2.getDepartment());
+				if (departmentCompare>0) return 3;
+				else if (departmentCompare<0) return -3;
+				else {
+					int positionCompare = s1.position.compareTo(s2.getPosition());
+					if (positionCompare>0) return 2;
+					else if (positionCompare<0) return -2;
+					else if (s1.name.equals(s2.getName()) &&
+							s1.gender.equals(s2.getGender())) {
+						return 0;
+					} else return 1;
+				}
+			}
+		};
+		staffs.sort(c);
+	}
+	
+	public String toString(){
+		return name + "\t(" +
+				department + ", " +
+				position + ", " +
+				gender + ")";
+	}
+
+	public String[] getTaskList(){
+		String[] taskList = new String[tasks.size()];
+		for (int i=0; i<tasks.size(); i++) 
+			taskList[i] = tasks.get(i).toString();
+		return taskList;
 	}
 	
 	
