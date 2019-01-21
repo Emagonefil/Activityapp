@@ -8,9 +8,9 @@ public class Staff{
 	
 	public class Task {
 		public String name;
-		public String description;
-		public Date startDate;
-		public Date endDate;
+		public String description; // 因为存储数据关系，暂时不支持换行
+		public String startDate;
+		public String endDate;
 		public String toString(){
 			return name + "(" +
 					(startDate==null? startDate : "?") +
@@ -86,6 +86,27 @@ public class Staff{
 		};
 		staffs.sort(c);
 	}
+
+
+	public String[] getTaskStrList(){
+		String[] taskList = new String[tasks.size()];
+		for (int i=0; i<tasks.size(); i++) 
+			taskList[i] = tasks.get(i).toString();
+		return taskList;
+	}
+	
+	public ArrayList<Task> getTasks(){
+		return tasks;
+	}
+	
+	public void addTask(String taskName, String startDate, String endDate, String description) {
+		Task t = new Task();
+		t.name = taskName;
+		t.startDate = startDate;
+		t.endDate = endDate;
+		t.description = description;
+		tasks.add(t);
+	}
 	
 	public String toString(){
 		return name + "\t(" +
@@ -94,12 +115,5 @@ public class Staff{
 				gender + ")";
 	}
 
-	public String[] getTaskList(){
-		String[] taskList = new String[tasks.size()];
-		for (int i=0; i<tasks.size(); i++) 
-			taskList[i] = tasks.get(i).toString();
-		return taskList;
-	}
-	
 	
 }
