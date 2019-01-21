@@ -16,7 +16,7 @@ public class Staff{
 					(startDate==null? startDate : "?") +
 					" to " +
 					(endDate==null? endDate : "?") +
-					(description==null? ")" : ", "+description+")");
+					(description==null? "?" : ", "+description+")");
 		}
 	}
 	private String name;
