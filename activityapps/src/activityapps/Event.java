@@ -7,6 +7,7 @@ public class Event {
 	private String name;
 	private Date date;
 	private Staff charge;
+	private Scene scene;
 	
 	private ArrayList<Item> eventItems;
 
@@ -15,6 +16,7 @@ public class Event {
 		this.name = name;
 		this.date = date;
 		this.charge = charge;
+		this.scene = null;
 	}
 
 	public String getName() {

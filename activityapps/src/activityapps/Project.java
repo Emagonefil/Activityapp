@@ -40,11 +40,36 @@ public class Project {
 
 	public void setCharge(Staff charge) {
 		this.charge = charge;
+		if (!staffs.contains(charge)) staffs.add(charge);
 	}
 
 
 	public Budget getBudget() {
 		return budget;
+	}
+	
+	
+	
+	public int addGlobalItem(Item item){
+		if (budget.addItem(item)!=0) {
+			return -1;
+		}
+		globalItems.add(item);
+		return 0;
+	}
+	
+	public Item getGlobalItem(int i){
+		return globalItems.get(i);
+	}
+	
+	public int getGlobalItemSize(){
+		return globalItems.size();
+	}
+	
+	public int removeGlobalItem(int i){
+		if (i<0 || i>globalItems.size()) return -1;
+		globalItems.remove(i);
+		return 0;
 	}
 	
 	public String toString(){
