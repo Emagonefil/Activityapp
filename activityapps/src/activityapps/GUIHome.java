@@ -22,6 +22,18 @@ import javax.swing.JScrollPane;
 import javax.swing.JComboBox;
 import javax.swing.JList;
 import java.awt.Font;
+import javax.swing.JTextField;
+import javax.swing.JPanel;
+import javax.swing.JButton;
+import javax.swing.JSplitPane;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.event.ListSelectionEvent;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 
 public class GUIHome {
 
@@ -36,6 +48,13 @@ public class GUIHome {
 	private JList list;
 	private JLabel background;
 	private JScrollPane scrollPane;
+	private JLabel iconStaff;
+	private JTextField textField;
+	private JPanel panelAddProject;
+	private JButton btnSubmit;
+	private JButton btnCancel;
+	private JPanel panelButtons;
+	private JLabel iconDelProject;
 
 	/**
 	 * Launch the application.
@@ -66,6 +85,15 @@ public class GUIHome {
 		initialize();
 	}
 
+	public void newProject(String name){
+		Project p = new Project(name);
+		projects.add(p);
+	}
+	
+	public void delProject(int pIndex){
+		projects.remove(pIndex);
+	}
+	
 	/**
 	 * Initialize the contents of the frame.
 	 */
@@ -88,7 +116,7 @@ public class GUIHome {
 			}
 		});
 		iconProject.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\projectIcon.png"));
-		iconProject.setBounds(15, 210, 100, 100);
+		iconProject.setBounds(15, 150, 100, 100);
 		frame.getContentPane().add(iconProject);
 		
 		iconCalendar = new JLabel("");
@@ -103,8 +131,23 @@ public class GUIHome {
 			}
 		});
 		iconCalendar.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\calendarIcon.png"));
-		iconCalendar.setBounds(14, 360, 100, 100);
+		iconCalendar.setBounds(14, 310, 100, 100);
 		frame.getContentPane().add(iconCalendar);
+		
+		iconStaff = new JLabel("");
+		iconStaff.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseEntered(MouseEvent arg0) {
+				iconStaff.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\staffIconBright.png"));
+			}
+			@Override
+			public void mouseExited(MouseEvent e) {
+				iconStaff.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\staffIcon.png"));
+			}
+		});
+		iconStaff.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\staffIcon.png"));
+		iconStaff.setBounds(15, 470, 100, 100);
+		frame.getContentPane().add(iconStaff);
 		
 		iconSettings = new JLabel("");
 		iconSettings.addMouseListener(new MouseAdapter() {
@@ -118,7 +161,7 @@ public class GUIHome {
 			}
 		});
 		iconSettings.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\SettingsIcon.png"));
-		iconSettings.setBounds(17, 785, 100, 100);
+		iconSettings.setBounds(14, 785, 100, 100);
 		frame.getContentPane().add(iconSettings);
 		
 		iconAddProject = new JLabel("");
@@ -131,22 +174,118 @@ public class GUIHome {
 			public void mouseExited(MouseEvent e) {
 				iconAddProject.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\addIcon.png"));
 			}
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				panelAddProject.show();
+			}
 		});
-		iconAddProject.setBounds(239, 736, 312, 80);
+		iconAddProject.setBounds(239, 736, 80, 80);
 		frame.getContentPane().add(iconAddProject);
 		iconAddProject.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\addIcon.png"));
+		
+		iconDelProject = new JLabel("");
+		iconDelProject.setBounds(1100, 736, 80, 80);
+		iconDelProject.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseEntered(MouseEvent arg0) {
+				if (list.isSelectionEmpty()) return;
+				iconDelProject.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\delIconBright.png"));
+			}
+			@Override
+			public void mouseExited(MouseEvent e) {
+				if (list.isSelectionEmpty()) return;
+				iconDelProject.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\delIconActive.png"));
+			}
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (list.isSelectionEmpty()) return;
+				delProject(list.getSelectedIndex());
+				list.setListData(projects.toArray());
+				list.setSelectedIndex(-1);
+				iconAddProject.updateUI();
+				iconDelProject.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\delIcon.png"));
+				iconDelProject.updateUI();
+			}
+		});
+		frame.getContentPane().add(iconDelProject);
+		iconDelProject.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\delIcon.png"));
 		
 		titleProject = new JLabel("");
 		titleProject.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\Projects.png"));
 		titleProject.setBounds(186, 169, 1035, 200);
 		frame.getContentPane().add(titleProject);
 		
+		panelAddProject = new JPanel();
+		panelAddProject.setBounds(360, 755, 631, 46);
+		frame.getContentPane().add(panelAddProject);
+		panelAddProject.setLayout(new BorderLayout(0, 0));
+		panelAddProject.hide();
+		
+		textField = new JTextField();
+		textField.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyChar()=='\n') {
+					newProject(textField.getText());
+					panelAddProject.hide();
+					list.setListData(projects.toArray());
+				}
+			}
+		});
+		textField.setForeground(new Color(0, 0, 128));
+		panelAddProject.add(textField);
+		textField.setText("<Project Name>");
+		textField.setFont(new Font("ºÚÌå", Font.PLAIN, 28));
+		textField.setColumns(10);
+		
+		panelButtons = new JPanel();
+		panelButtons.setForeground(Color.WHITE);
+		panelButtons.setBackground(Color.WHITE);
+		panelAddProject.add(panelButtons, BorderLayout.EAST);
+		panelButtons.setLayout(new BorderLayout(0, 0));
+		
+		btnSubmit = new JButton("Submit");
+		btnSubmit.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				newProject(textField.getText());
+				panelAddProject.hide();
+				list.setListData(projects.toArray());
+			}
+		});
+		btnSubmit.setBackground(Color.WHITE);
+		panelButtons.add(btnSubmit, BorderLayout.WEST);
+		
+		btnCancel = new JButton("Cancel");
+		btnCancel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				panelAddProject.hide();
+			}
+		});
+		btnCancel.setBackground(Color.WHITE);
+		panelButtons.add(btnCancel, BorderLayout.EAST);
+		
 		list = new JList();
+		list.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusLost(FocusEvent arg0) {
+				list.setSelectedIndex(-1);
+			}
+		});
+		list.addListSelectionListener(new ListSelectionListener() {
+			public void valueChanged(ListSelectionEvent arg0) {
+				if (list.isSelectionEmpty())
+					iconDelProject.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\delIcon.png"));
+				else {
+					iconDelProject.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\delIconActive.png"));
+				}
+			}
+		});
 		list.setFont(new Font("Arial", Font.PLAIN, 26));
 		list.setListData(projects.toArray());
 		
 		scrollPane = new JScrollPane(list);
-		scrollPane.setBounds(239, 321, 929, 495);
+		scrollPane.setBounds(239, 321, 938, 495);
 		frame.getContentPane().add(scrollPane);
 		
 		background = new JLabel("");
