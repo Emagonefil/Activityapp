@@ -5,9 +5,11 @@ import java.util.ArrayList;
 public class Project {
 	private String name;
 	private Staff charge;
-	private ArrayList<Event> events;
+	protected ArrayList<Event> events;
 	private ArrayList<Staff> staffs;
-	private ArrayList<Item> globalItems;
+	protected ArrayList<Item> globalItems;
+	
+	private String intro;
 	
 	private Budget budget;
 	
@@ -72,8 +74,20 @@ public class Project {
 		return 0;
 	}
 	
+	
+	
+	public String getIntro() {
+		return intro;
+	}
+
+
+	public void setIntro(String intro) {
+		this.intro = intro;
+	}
+
+
 	public String toString(){
-		return "Project    :    " + name + " (" +
+		return "Project    :    " + this.name + " (" +
 				(charge == null? "NO Manager, " : charge.getName()) + 
 				(budget == null? "NO Budget" : 
 					(budget.getAvailable())+"/"+budget.getTotal()) +

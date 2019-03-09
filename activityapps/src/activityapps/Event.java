@@ -8,8 +8,14 @@ public class Event {
 	private Date date;
 	private Staff charge;
 	private Scene scene;
+	protected Budget budget;
 	
 	private ArrayList<Item> eventItems;
+	
+	public Event(String name){
+		super();
+		this.name = name;
+	}
 
 	public Event(String name, Date date, Staff charge) {
 		super();
@@ -41,6 +47,14 @@ public class Event {
 
 	public void setCharge(Staff charge) {
 		this.charge = charge;
+	}
+	
+	public String toString() {
+		StringBuffer sb = new StringBuffer(this.name + "  ");
+		if (this.date==null) sb.append("NO DATE"); else sb.append(date);
+		sb.append("  ");
+		if (this.charge!=null) sb.append(this.charge.getName());
+		return sb.toString();
 	}
 	
 	

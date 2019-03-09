@@ -75,8 +75,8 @@ public class Staff{
 				else if (departmentCompare<0) return -3;
 				else {
 					int positionCompare = s1.position.compareTo(s2.getPosition());
-					if (positionCompare>0) return 2;
-					else if (positionCompare<0) return -2;
+					if (positionCompare>0) return -2;
+					else if (positionCompare<0) return 2;
 					else if (s1.name.equals(s2.getName()) &&
 							s1.gender.equals(s2.getGender())) {
 						return 0;
@@ -109,6 +109,7 @@ public class Staff{
 	}
 	
 	public String toString(){
+		if (this.name.equals("-- None --")) return this.name;
 		return name + "\t(" +
 				department + ", " +
 				position + ", " +

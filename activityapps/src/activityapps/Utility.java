@@ -1,6 +1,7 @@
 package activityapps;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 
 import com.sun.xml.internal.ws.util.StringUtils;
 
@@ -46,6 +47,7 @@ public class Utility {
 	
 	public static ArrayList<Staff> loadStaffs(){
 		ArrayList<Staff> staffs = new ArrayList<Staff>();
+		staffs.add(new Staff("-- None --", "", "", ""));
 		String pathname = "staffs.txt"; 
 		File filename = new File(pathname); 
 		InputStreamReader reader;
@@ -79,6 +81,7 @@ public class Utility {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		Staff.reorder(staffs);
 		return staffs;
 	}
 
