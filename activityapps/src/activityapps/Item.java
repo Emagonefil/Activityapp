@@ -6,17 +6,19 @@ public class Item {
 	private double amount;
 	private double obtained;
 	private String description;
-	private Staff respondant = null;
+	private Staff collector = null;
 	
 	public Item(String name){
 		this.name = name;
 	}
 	
-	public Item(String name, double unitPrice, double amount, String description) {
+	public Item(String name, double unitPrice, double amount, String description, Staff collector) {
+		this.name = name;
 		this.unitPrice = unitPrice;
 		this.amount = amount;
 		this.obtained = 0;
 		this.description = description;
+		this.collector = collector;
 	}
 	
 	public String getName() {
@@ -60,18 +62,18 @@ public class Item {
 	}
 
 	public Staff getRespondant() {
-		return respondant;
+		return collector;
 	}
 
-	public void setRespondant(Staff respondant) {
-		this.respondant = respondant;
+	public void setCollector(Staff collector) {
+		this.collector = collector;
 	}
 
 	public String toString(){
 		double cost = unitPrice * amount;
-		return name + "\t" + 
+		return name + " " + 
 				cost+"("+unitPrice + "¡Á" + amount+")\t" +
-				(100*(obtained/amount)) + "%\t" +
+				(100*(obtained/amount)) + "% " +
 				description;
 	}
 }

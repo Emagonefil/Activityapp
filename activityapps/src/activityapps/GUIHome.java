@@ -22,6 +22,8 @@ import java.awt.event.MouseEvent;
 import javax.swing.JScrollPane;
 import javax.swing.JComboBox;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
+
 import java.awt.Font;
 import javax.swing.JTextField;
 import javax.swing.JPanel;
@@ -32,6 +34,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+import javax.swing.table.TableColumnModel;
 import javax.swing.event.ListSelectionEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -43,6 +48,12 @@ import java.awt.event.ItemEvent;
 import javax.swing.SwingConstants;
 import javax.swing.JTable;
 import javax.swing.JTextPane;
+import java.awt.FlowLayout;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultCellEditor;
+
+import java.awt.GridLayout;
+import java.awt.CardLayout;
 
 public class GUIHome {
 
@@ -51,13 +62,15 @@ public class GUIHome {
 	private ArrayList<Staff> staffs;
 	private boolean addingProject = false;
 	private Project currentProject = null;
+	private Event currentEvent = null;
+	private Budget currentBudget = new Budget(100);
 	
 	private int pageDepth; // 0-home 1-projectHome 2-projectBudget 3-eventHome 4-eventBudget
 	
 	
 	// Navigation Components
 	private JLabel iconProject;
-	private JLabel iconCalendar;
+	private JLabel iconExport;
 	private JLabel iconStaff;
 	private JLabel iconSettings;
 	private JLabel iconBack;
@@ -120,7 +133,16 @@ public class GUIHome {
 	private JLabel lblEventBudget;
 	private JLabel lblEventBudget_1;
 	private JLabel butBudgetEventManager;
-
+	
+	// Budget Manager Components
+	private JLabel lblBudgetName;
+	private JTable table;
+	private JScrollPane budgetPane;
+	private JPanel tableOperation;
+	private JButton butAddItem;
+	private JButton butDelItem;
+	private JButton butBudgetExport;
+	private JComboBox boxItemCharge;
 
 	/**
 	 * Launch the application.
@@ -169,6 +191,11 @@ public class GUIHome {
 	
 	public void delEvent(int pIndex){
 		currentProject.events.remove(pIndex);
+	}
+	
+	private boolean projectBudgetCheck(double amount){
+		if (currentProject.getBudget()==null) return false;
+		return currentProject.getBudget().getAvailable()>=amount;
 	}
 	
 	// Scene Home Page
@@ -546,6 +573,28 @@ public class GUIHome {
 		eventPane.setColumnHeaderView(lblEvents);
 		
 		eventList = new JList();
+		eventList.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				int clickTimes = e.getClickCount();
+				if (clickTimes >= 2) projectToEvent();
+			}
+		});
+		eventList.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusLost(FocusEvent e) {
+				eventList.setSelectedIndex(-1);
+			}
+		});
+		eventList.addListSelectionListener(new ListSelectionListener() {
+			public void valueChanged(ListSelectionEvent arg0) {
+				if (eventList.isSelectionEmpty())
+					iconDelEvent.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\delIcon.png"));
+				else {
+					iconDelEvent.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\delIconActive.png"));
+				}
+			}
+		});
 		eventList.setFont(new Font("黑体", Font.PLAIN, 24));
 		eventPane.setViewportView(eventList);
 		
@@ -557,6 +606,27 @@ public class GUIHome {
 		
 		btnBudgetManager = new JLabel("Budget Manager\r\n \u9884\u7B97\u7269\u8D44\u7BA1\u7406\u5668");
 		btnBudgetManager.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (currentProject.getBudget() == null) {
+					String in = JOptionPane.showInputDialog("Please set up your MAX budget first. \n GBP:");
+					if (in==null) return;
+					try {
+						double total = Double.valueOf(in);
+						Budget budget = new Budget(total);
+						currentProject.setBudget(budget);
+						DecimalFormat df=new DecimalFormat("#.00");
+						lblProjectBudget.setText((currentProject.getBudget()==null ? " 0 / 0 " : 
+						    	df.format(currentProject.getBudget().getAvailable()) + " / " +df.format(currentProject.getBudget().getTotal())) 
+						    );
+					} catch (Exception exc){
+						exc.printStackTrace();
+						JOptionPane.showMessageDialog(budgetProjectPanel, "Please put a number");
+					}
+				} else {
+					projectToBudget();
+				}
+			}
 			@Override
 			public void mouseEntered(MouseEvent e) {
 				btnBudgetManager.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\iconCalculatorBright.png"));
@@ -669,7 +739,7 @@ public class GUIHome {
 		boxEventCharge.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent e) {
 				if (boxEventCharge.getSelectedIndex() == 0) currentProject.setCharge(null);
-				else currentProject.setCharge((Staff) boxEventCharge.getSelectedItem());
+				else currentEvent.setCharge((Staff) boxEventCharge.getSelectedItem());
 			}
 		});
 		boxEventCharge.setFont(new Font("黑体", Font.PLAIN, 24));
@@ -778,6 +848,40 @@ public class GUIHome {
 				butBudgetEventManager.setFont(new Font("黑体", Font.PLAIN, 20));
 				butBudgetEventManager.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\iconCalculator.png"));
 			}
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (currentProject.getBudget()==null) {
+					JOptionPane.showMessageDialog(budgetEventPanel, 
+						"No project budget! Please set up project budget first");
+					return;
+				}
+				if (currentEvent.getBudget() == null) {
+					String in = JOptionPane.showInputDialog(budgetEventPanel,"Please set up your MAX budget for this event. \n GBP:");
+					if (in==null) return;
+					try {
+						double total = Double.valueOf(in);
+						if (projectBudgetCheck(total)) {
+							currentProject.getBudget().addItem(
+									new Item(currentEvent.getName(), total, 1, "EVENT BUDGET", staffs.get(0)));
+							System.out.println(currentProject.getBudget().expenses.size());
+							Budget budget = new Budget(total);
+							currentEvent.setBudget(budget);
+							DecimalFormat df=new DecimalFormat("#.00");
+							lblEventBudget.setText((currentEvent.getBudget()==null ? " 0 / 0 " : 
+							    	df.format(currentEvent.getBudget().getAvailable()) + " / " +df.format(currentEvent.getBudget().getTotal())) 
+							    );
+						} else {
+							JOptionPane.showMessageDialog(budgetEventPanel, 
+									"Exceed project budget!! Project available: "+currentProject.getBudget().getAvailable());
+						}
+					} catch (Exception exc){
+						exc.printStackTrace();
+						JOptionPane.showMessageDialog(budgetEventPanel,"Please put a number");
+					}
+				} else {
+					eventToBudget();
+				}
+			}
 		});
 		butBudgetEventManager.setFont(new Font("黑体", Font.PLAIN, 20));
 		butBudgetEventManager.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\iconCalculator.png"));
@@ -799,6 +903,108 @@ public class GUIHome {
 		budgetEventPanel.show();
 	}
 	
+	private void hideEventHome() {
+		lblEventName.hide();
+		lblEventCharge.hide();
+		boxEventCharge.hide();
+		introEventPane.hide();
+		rundownPanel.hide();
+		scenePanel.hide();
+		budgetEventPanel.hide();
+	}
+	
+	// Scene Budget Manager
+	
+	private void initBudgetManager() {
+		lblBudgetName = new JLabel("Budget Name");
+		lblBudgetName.setFont(new Font("黑体", Font.PLAIN, 64));
+		lblBudgetName.setBounds(165, 105, 1000, 106);
+		frame.getContentPane().add(lblBudgetName);
+		
+		budgetPane = new JScrollPane();
+		budgetPane.setBounds(165, 212, 1048, 639);
+		frame.getContentPane().add(budgetPane);
+		
+		boxItemCharge = new JComboBox(staffs.toArray());
+		
+		table = new JTable();
+		table.setCellSelectionEnabled(true);
+		table.setFillsViewportHeight(true);
+		table.setFont(new Font("黑体", Font.PLAIN, 22));
+		table.setModel(new BudgetTableModel(currentBudget.expenses, currentBudget));
+		table.setRowHeight(22);
+		table.getColumnModel().getColumn(0).setWidth(2000);
+		table.getColumnModel().getColumn(1).setWidth(500);
+		table.getColumnModel().getColumn(2).setWidth(500);
+		table.getColumnModel().getColumn(3).setWidth(500);
+		table.getColumnModel().getColumn(4).setWidth(500);
+		table.getColumnModel().getColumn(5).setWidth(200);
+		table.getColumnModel().getColumn(5).setCellEditor(new DefaultCellEditor(boxItemCharge));
+		table.getModel().addTableModelListener(new TableModelListener(){
+			@Override
+			public void tableChanged(TableModelEvent e) {
+				BudgetTableModel model = (BudgetTableModel) table.getModel();
+				System.out.println("HI");
+				if (!model.lastChangeSuccess) {
+					JOptionPane.showMessageDialog(table, 
+							"Exceed budget!!    Available: "+currentBudget.getAvailable());
+
+					model.lastChangeSuccess = true;
+				}
+			}
+		});
+		
+		budgetPane.setViewportView(table);
+		
+		tableOperation = new JPanel();
+		budgetPane.setRowHeaderView(tableOperation);
+		tableOperation.setLayout(new GridLayout(0, 1, 0, 0));
+		
+		butAddItem = new JButton("\u6DFB\u52A0");
+		butAddItem.setFont(new Font("黑体", Font.PLAIN, 22));
+		butAddItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				Item item = new Item("", 0, 0, "", staffs.get(0));
+				currentBudget.expenses.add(item);
+				table.setModel(new BudgetTableModel(currentBudget.expenses, currentBudget));
+				table.getColumnModel().getColumn(5).setCellEditor(new DefaultCellEditor(boxItemCharge));
+			}
+		});
+		tableOperation.add(butAddItem);
+		
+		butDelItem = new JButton("\u5220\u9664");
+		butDelItem.setFont(new Font("黑体", Font.PLAIN, 22));
+		butDelItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				int selected = table.getSelectedRow();
+				if (selected!=-1) {
+					int choice = JOptionPane.showConfirmDialog(
+							null,"Delete "+currentBudget.expenses.get(selected).getName()+"?",
+							"",JOptionPane.OK_OPTION);
+					if(choice==JOptionPane.OK_OPTION){
+						currentBudget.expenses.remove(selected);
+						table.setModel(new BudgetTableModel(currentBudget.expenses, currentBudget));
+						table.getColumnModel().getColumn(5).setCellEditor(new DefaultCellEditor(boxItemCharge));
+					}
+				}
+			}
+		});
+		tableOperation.add(butDelItem);
+		
+		butBudgetExport = new JButton("\u5BFC\u51FA");
+		butBudgetExport.setFont(new Font("黑体", Font.PLAIN, 22));
+		tableOperation.add(butBudgetExport);
+	}
+	
+	private void hideBudgetManager(){
+		lblBudgetName.hide();                
+		budgetPane.hide();;   
+	}
+	
+	private void showBudgetManager(){
+		lblBudgetName.show();                
+		budgetPane.show();;   
+	}
 	
 	// Scene Transition Methods
 	
@@ -806,23 +1012,106 @@ public class GUIHome {
 		hideHomePage();
 		currentProject = (Project) projectList.getSelectedValue();
 		lblProjectName.setText(currentProject.getName());
+		eventList.setListData(currentProject.events.toArray());
+		if (currentProject.getBudget()!=null){
+			budgetProjectList.setListData(currentProject.getBudget().expenses.toArray());
+			DecimalFormat df=new DecimalFormat("#.00");
+			lblProjectBudget.setText((currentProject.getBudget()==null ? " 0 / 0 " : 
+		    	df.format(currentProject.getBudget().getAvailable()) + " / " +df.format(currentProject.getBudget().getTotal())) 
+		    );
+		}
 		iconBack.enable();
 		iconBack.repaint();
-		DecimalFormat df=new DecimalFormat("#.000");
+		iconExport.enable();
+		iconExport.repaint();
+		DecimalFormat df=new DecimalFormat("#.00");
 		lblProjectBudget.setText((currentProject.getBudget()==null ? " 0 / 0 " : 
 		    	df.format(currentProject.getBudget().getAvailable()) + " / " +df.format(currentProject.getBudget().getTotal())) 
 		    );
 		pageDepth = 1;
 		showProjectHome();
 	}
-	
+
 	private void projectToHome() {
 		hideProjectHome();
 		currentProject = null;
 		iconBack.disable();
 		iconBack.repaint();
+		iconExport.disable();
+		iconExport.repaint();
 		pageDepth = 0;
 		showHomePage();
+	}
+	
+	private void projectToEvent() {
+		hideProjectHome();
+		currentEvent = (Event) eventList.getSelectedValue();
+		lblEventName.setText(currentEvent.getName());
+		pageDepth = 3;
+		DecimalFormat df=new DecimalFormat("#.00");
+		lblEventBudget.setText((currentEvent.getBudget()==null ? " 0 / 0 " : 
+	    	df.format(currentEvent.getBudget().getAvailable()) + " / " +df.format(currentEvent.getBudget().getTotal())) 
+	    );
+		showEventHome();
+	}
+	
+	private void eventToProject() {
+		hideEventHome();
+		currentEvent = null;
+		eventList.setListData(currentProject.events.toArray());
+		if (currentProject.getBudget()!=null){
+			budgetProjectList.setListData(currentProject.getBudget().expenses.toArray());
+			DecimalFormat df=new DecimalFormat("#.00");
+			lblProjectBudget.setText((currentProject.getBudget()==null ? " 0 / 0 " : 
+		    	df.format(currentProject.getBudget().getAvailable()) + " / " +df.format(currentProject.getBudget().getTotal())) 
+		    );
+		}
+		pageDepth = 1;
+		showProjectHome();
+	}
+	
+	private void projectToBudget() {
+		hideProjectHome();
+		currentBudget = currentProject.getBudget();
+		((BudgetTableModel) table.getModel()).updateItems(currentBudget.expenses);
+		pageDepth = 2;
+		lblBudgetName.setText("BUDGET of "+currentProject.getName());
+		showBudgetManager();
+	}
+	
+	private void budgetToProject() {
+		hideBudgetManager();
+		eventList.setListData(currentProject.events.toArray());
+		if (currentProject.getBudget()!=null){
+			budgetProjectList.setListData(currentProject.getBudget().expenses.toArray());
+			DecimalFormat df=new DecimalFormat("#.00");
+			lblProjectBudget.setText((currentProject.getBudget()==null ? " 0 / 0 " : 
+		    	df.format(currentProject.getBudget().getAvailable()) + " / " +df.format(currentProject.getBudget().getTotal())) 
+		    );
+		}
+		currentBudget = null;
+		pageDepth = 1;
+		showProjectHome();
+	}
+	
+	private void eventToBudget() {
+		hideEventHome();
+		currentBudget = currentEvent.getBudget();
+		((BudgetTableModel) table.getModel()).updateItems(currentBudget.expenses);
+		pageDepth = 4;
+		lblBudgetName.setText("BUDGET of "+currentEvent.getName());
+		showBudgetManager();
+	}
+	
+	private void budgetToEvent() {
+		hideBudgetManager();
+		currentBudget = null;
+		pageDepth = 3;
+		DecimalFormat df=new DecimalFormat("#.00");
+		lblEventBudget.setText((currentEvent.getBudget()==null ? " 0 / 0 " : 
+	    	df.format(currentEvent.getBudget().getAvailable()) + " / " +df.format(currentEvent.getBudget().getTotal())) 
+	    );
+		showEventHome();
 	}
 	
 	private void backGroundNavigation() {
@@ -839,9 +1128,14 @@ public class GUIHome {
 			public void mouseClicked(MouseEvent e) {
 				switch (pageDepth) {
 				case 1: projectToHome(); break;
+				case 2: budgetToProject(); break;
+				case 3: eventToProject(); break;
+				case 4: budgetToEvent(); break;
 				}
 			}
 		});
+		
+		
 		iconBack.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\iconBackActive.png"));
 		iconBack.setDisabledIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\iconBack.png"));
 		iconBack.setEnabled(false);
@@ -864,20 +1158,26 @@ public class GUIHome {
 		iconProject.setBounds(15, 150, 100, 100);
 		frame.getContentPane().add(iconProject);
 		
-		iconCalendar = new JLabel("");
-		iconCalendar.addMouseListener(new MouseAdapter() {
+		iconExport = new JLabel("");
+		iconExport.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseEntered(MouseEvent arg0) {
-				iconCalendar.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\calendarIconBright.png"));
+				if (currentProject != null)
+					iconExport.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\exportIconBright.png"));
 			}
 			@Override
 			public void mouseExited(MouseEvent e) {
-				iconCalendar.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\calendarIcon.png"));
+				if (currentProject != null)
+					iconExport.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\exportIconActive.png"));
+				else
+					iconExport.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\exportIcon.png"));
 			}
 		});
-		iconCalendar.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\calendarIcon.png"));
-		iconCalendar.setBounds(14, 310, 100, 100);
-		frame.getContentPane().add(iconCalendar);
+		iconExport.setIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\exportIconActive.png"));
+		iconExport.setDisabledIcon(new ImageIcon("C:\\Users\\ZX50V\\OneDrive\\Prog\\Java\\Activityapp\\exportIcon.png"));
+		iconExport.setBounds(14, 310, 100, 100);
+		iconExport.disable();
+		frame.getContentPane().add(iconExport);
 		
 		iconStaff = new JLabel("");
 		iconStaff.addMouseListener(new MouseAdapter() {
@@ -932,12 +1232,15 @@ public class GUIHome {
 		frame.setBackground(Color.WHITE);
 		frame.setBounds(0, 0, 1280, 960);
 		
-		//initHomePage();
-		//initProjectHome();
-		//hideProjectHome();
-		
+		initHomePage();
+		initProjectHome();
 		initEventHome();
+		initBudgetManager();
 		
+		hideProjectHome();
+		hideEventHome();
+		hideBudgetManager();
+			
 		backGroundNavigation();
 	}
 }

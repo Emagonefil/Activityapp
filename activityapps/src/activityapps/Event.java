@@ -49,6 +49,14 @@ public class Event {
 		this.charge = charge;
 	}
 	
+	public Budget getBudget() {
+		return budget;
+	}
+
+	public void setBudget(Budget budget) {
+		this.budget = budget;
+	}
+
 	public String toString() {
 		StringBuffer sb = new StringBuffer(this.name + "  ");
 		if (this.date==null) sb.append("NO DATE"); else sb.append(date);

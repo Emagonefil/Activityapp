@@ -50,7 +50,9 @@ public class Project {
 		return budget;
 	}
 	
-	
+	public void setBudget(Budget budget){
+		this.budget = budget;
+	}
 	
 	public int addGlobalItem(Item item){
 		if (budget.addItem(item)!=0) {
@@ -88,7 +90,7 @@ public class Project {
 
 	public String toString(){
 		return "Project    :    " + this.name + " (" +
-				(charge == null? "NO Manager, " : charge.getName()) + 
+				(charge == null? "NO Manager, " : (charge.getName())+", ") + 
 				(budget == null? "NO Budget" : 
 					(budget.getAvailable())+"/"+budget.getTotal()) +
 				")";
